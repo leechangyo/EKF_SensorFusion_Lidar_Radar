@@ -36,6 +36,17 @@ void KalmanFilter::Update(const VectorXd &z) {
   /**
    * TODO: update the state by using Kalman Filter equations
    */
+  VectorXd z_pred = H_ * x_;
+  VectorXd y = z - z_pred;
+  MatrixXd Ht = H_.transpose();
+  MatrixXd S = H_ * P_ * Ht + R_;
+  MatrixXd Si = S.inverse();
+  MatrixXd K = P_ * Ht * Si;
+
+  x_ = x_ + K * y;
+  int x_size = x_.size();
+  MatrixXd I = MatrixXd::Identity(x_size,x_size);
+  P_ = (I - K*H_) * P_;
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
@@ -51,7 +62,7 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   double rho = sqrt(px*px + py*py);
   double theta = atan2(py,px);
   double rho_dot = (px*vx + py*vy) / rho;
-  VectorXd h = VectorXd(3);
+  VectorXd h = VectorXd(3); // prediced measurment from predict state
   h<< rho, theta, rho_dot;
   VectorXd y = z - h;
   // Nomalization angle;
